@@ -79,7 +79,7 @@ let is_evening: bool = true;
 
 ---------------------------------------------------------------------------------------------
 
-char
+char(4字节)
 let your_character: char = 'C';
 
 ---------------------------------------------------------------------------------------------
@@ -289,6 +289,199 @@ impl Package {
 
     fn get_fees(&self, cents_per_gram: i32) -> i32 {
         self.weight_in_grams*cents_per_gram
+    }
+}
+```
+
+## 9.enums
+
+```rust
+枚举的定义，注意和struct的定义类似，最后一个变量最后面也需要,
+enum Message {
+    Quit,
+    Echo,
+    Move,
+    ChangeColor,
+}
+
+---------------------------------------------------------------------------------------------
+
+变量有状态的枚举的定义和使用
+tips:看下面怎么使用的就怎么定义，比如Move使用{}，那么定义时也用{}，如果是用()，定义时也要用()
+enum Message {
+    Move{x:i32,y:i32},
+    Echo(String),
+    ChangeColor(u8,u8,u8),
+    Quit,
+}
+let messages = [
+    Message::Move { x: 10, y: 30 },
+    Message::Echo(String::from("hello world")),
+    Message::ChangeColor(200, 255, 255),
+    Message::Quit,
+];
+
+---------------------------------------------------------------------------------------------
+
+匹配枚举内的变量，match enum_variables{}，然后用=>表示对应的处理方式
+enum Message {
+    // TODO: implement the message variant types based on their usage below
+    ChangeColor(u8,u8,u8),
+    Echo(String),
+    Move(Point),
+    Quit,
+}
+
+state.process(Message::ChangeColor(255, 0, 255));
+state.process(Message::Echo(String::from("hello world")));
+state.process(Message::Move(Point { x: 10, y: 15 }));
+state.process(Message::Quit);
+
+struct Point {
+    x: u8,
+    y: u8,
+}
+
+struct State {
+    color: (u8, u8, u8),
+    position: Point,
+    quit: bool,
+}
+
+impl State {
+    fn change_color(&mut self, color: (u8, u8, u8)) {
+        self.color = color;
+    }
+
+    fn quit(&mut self) {
+        self.quit = true;
+    }
+
+    fn echo(&self, s: String) {
+        println!("{}", s);
+    }
+
+    fn move_position(&mut self, p: Point) {
+        self.position = p;
+    }
+
+    fn process(&mut self, message: Message) {
+        // TODO: create a match expression to process the different message variants
+        // Remember: When passing a tuple as a function argument, you'll need extra parentheses: fn function((t, u, p, l, e))
+        match message{
+            Message::ChangeColor(red,green,blue) => self.change_color((red,green,blue)),
+            Message::Echo(s) => self.echo(s),
+            Message::Move(point) => self.move_position(point),
+            Message::Quit => self.quit(),
+        }
+    }
+}
+```
+
+## 10.strings
+
+```rust
+String:具有所有权
+&str:字符串切片或静态字符串的引用，占两个字节，第一个字节用于记录起始位置，第二个字节用于记录切片长度。相当于一个视图，只可读不可更改
+
+通过调用&str.to_string()或者String::from(&str)可以让&str转成String
+
+let s:&str="blue";
+
+---------------------------------------------------------------------------------------------
+
+&String可以自动解引用为&str
+
+---------------------------------------------------------------------------------------------
+
+修改字符串
+fn trim_me(input: &str) -> String {
+    // TODO: Remove whitespace from both ends of a string!
+    input.trim().to_string()
+}
+
+fn compose_me(input: &str) -> String {
+    // TODO: Add " world!" to the string! There's multiple ways to do this!
+    input.to_string()+" world!"
+}
+
+fn replace_me(input: &str) -> String {
+    // TODO: Replace "cars" in the string with "balloons"!
+    input.replace("cars","balloons")
+}
+
+---------------------------------------------------------------------------------------------
+
+需要开辟新的空间就需要String，而如果不用开辟新的空间，则用&str即可
+fn string_slice(arg: &str) {
+    println!("{}", arg);
+}
+fn string(arg: String) {
+    println!("{}", arg);
+}
+
+fn main() {
+    string_slice("blue");
+    string("red".to_string());
+    string(String::from("hi"));
+    string("rust is fun!".to_owned());
+    string("nice weather".into());//into()自动转换
+    string(format!("Interpolation {}", "Station"));//拼接字符串
+    string_slice(&String::from("abc")[0..1]);//"ab"
+    string_slice("  hello there ".trim());
+    string("Happy Monday!".to_string().replace("Mon", "Tues"));
+    string("mY sHiFt KeY iS sTiCkY".to_lowercase());
+}
+```
+
+## 11.modules
+
+```rust
+mod相当于一个命名空间
+
+命名空间的成员默认是private的，要想外面能够看到并使用，就需要在对应的成员声明前面加上pub
+mod sausage_factory {
+    // Don't let anybody outside of this module see this!
+    fn get_secret_recipe() -> String {
+        String::from("Ginger")
+    }
+
+    pub fn make_sausage() {
+        get_secret_recipe();
+        println!("sausage!");
+    }
+}
+
+---------------------------------------------------------------------------------------------
+
+嵌套mod，但是将PEAR、CUCUMBER分别重命名为fruit、veggie，且前面加上pub，这样就可以在外面这样使用：
+delicious_snacks::fruit;
+delicious_snacks::veggie;
+mod delicious_snacks {
+    // TODO: Fix these use statements
+    pub use self::fruits::PEAR as fruit;
+    pub use self::veggies::CUCUMBER as veggie;
+
+    mod fruits {
+        pub const PEAR: &'static str = "Pear";
+        pub const APPLE: &'static str = "Apple";
+    }
+
+    mod veggies {
+        pub const CUCUMBER: &'static str = "Cucumber";
+        pub const CARROT: &'static str = "Carrot";
+    }
+}
+
+---------------------------------------------------------------------------------------------
+
+使用系统mod，引入了std::time::SystemTime和std::time::UNIX_EPOCH
+use std::time::{SystemTime,UNIX_EPOCH};
+
+fn main() {
+    match SystemTime::now().duration_since(UNIX_EPOCH) {
+        Ok(n) => println!("1970-01-01 00:00:00 UTC was {} seconds ago!", n.as_secs()),
+        Err(_) => panic!("SystemTime before UNIX EPOCH!"),
     }
 }
 ```
