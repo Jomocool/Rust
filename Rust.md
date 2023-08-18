@@ -486,3 +486,118 @@ fn main() {
 }
 ```
 
+## 12.hashmaps
+
+```rust
+声明一个哈希表并插入数据，会根据后面插入的数据来定义类型
+let	mut hash_map = HashMap::new();
+let mut basket = HashMap::with_capacity(3);//至少能够插入3个元素
+basket.insert(String::from("banana"), 2);
+basket.insert(String::from("apple"),3);
+basket.insert(String::from("mango"),4);
+
+获取哈希表的大小
+basket.len()
+
+获取哈希表value值的总和
+basket.values().sum();
+
+---------------------------------------------------------------------------------------------
+
+插入数据但不破坏原先的数据
+basket.entry(fruit).or_insert(1)//在basket没有fruit的情况下，才插入这个新元素(fruit,1)
+basket.entry(fruit).or_insert_with(function())//如果插入值需要通过函数计算，就用or_insert_with
+
+---------------------------------------------------------------------------------------------
+
+由于传入函数之后会失去所有权，导致后面拿不到team_1_name，所以传入clone
+如果有对应队伍，修改value即可
+如果没有对应队伍，创建新的元素插入哈希表中
+scores.entry(team_1_name.clone())
+.and_modify(|team|{
+    team.goals_scored+=team_1_score;
+    team.goals_conceded+=team_2_score;
+})
+.or_insert_with(||{
+    Team{name:team_1_name,goals_scored:team_1_score,goals_conceded:team_2_score,}
+});
+
+scores.entry(team_2_name.clone())
+.and_modify(|team|{
+    team.goals_scored+=team_2_score;
+    team.goals_conceded+=team_1_score;
+})
+.or_insert_with(||{
+    Team{name:team_2_name,goals_scored:team_2_score,goals_conceded:team_1_score,}
+});
+```
+
+## 13.quiz2
+
+```rust
+mod my_module{
+    pub fn transformer(){}
+}
+mod tests{
+    //如果要想调用my_module的transformer()，要这样做
+    use super::my_module::transformer//因为当前模块没有my_module，所以需要在前面加super
+}
+```
+
+## 14.options
+
+```rust
+Option<type>:要么有值Some(value)，要么没有值None
+fn maybe_icecream(time_of_day: u16) -> Option<u16> {
+    if time_of_day<22{
+        Some(5)
+    }else if(time_of_day<24){
+        Some(0)
+    }else{
+        None
+    }
+}
+//确定有值才用unwrap()，否则不轻易使用
+let icecreams = maybe_icecream(12).unwrap();
+
+---------------------------------------------------------------------------------------------
+
+fn simple_option() {
+    let target = "rustlings";
+    let optional_target = Some(target);
+
+    // TODO: Make this an if let statement whose value is "Some" type
+    if let Some(word) = optional_target {
+        assert_eq!(word, target);
+    }
+    /*
+    等价于：
+    match optional_target{
+    	Some(word) => {
+    		assert_eq!(word,target);
+    	}
+    	None => {}
+    }
+    但是上面的写法更优雅且更易懂
+    */
+}
+
+let mut optional_integers: Vec<Option<i8>> = vec![None];
+optional_integets.pop()返回的是Option<T>，即Option<Option<i8>>
+所以需要嵌套Some去接收，let Some(Some(integer))=optional_integets.pop();
+
+---------------------------------------------------------------------------------------------
+
+Some(p)会把p(也就是y对应的Point)的所有权拿走，所以后面再用到y就有问题了，解决方法是传入引用，即ref p
+这里不用&的原因是，&是创建引用的运算符，而ref是用于模式匹配时绑定引用的语法，这里是想通过match y来匹配的，所以用ref
+fn main() {
+    let y: Option<Point> = Some(Point { x: 100, y: 200 });
+
+    match y {
+        Some(p) => println!("Co-ordinates are {},{} ", p.x, p.y),
+        _ => panic!("no match!"),
+    }
+    y; // Fix without deleting this line.
+}
+```
+
